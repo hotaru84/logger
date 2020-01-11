@@ -4,18 +4,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.media.projection.MediaProjection;
 import android.os.Environment;
 import android.os.FileObserver;
-import android.os.Handler;
 import android.os.IBinder;
 import android.widget.Toast;
 
@@ -44,8 +37,9 @@ public class LoggerService extends Service {
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notificationBuilder;
     private ImageFileObserver imageFileObserver;
-    private IntentListener intentListener;
+    private BatteryLogger batteryLogger;
     private StepLogger stepLogger;
+    private UsageLogger usageLogger;
 
     @Override
     public void onCreate() {
@@ -56,8 +50,9 @@ public class LoggerService extends Service {
         files.add(getExternalFilesDir(Environment.DIRECTORY_DCIM));
         files.add(getExternalFilesDir(Environment.DIRECTORY_PICTURES));
         imageFileObserver = new ImageFileObserver(files);
-        intentListener = new IntentListener(this);
+        batteryLogger = new BatteryLogger(this);
         stepLogger = new StepLogger(getApplicationContext());
+        usageLogger = new UsageLogger(getApplicationContext());
     }
 
     @Override
@@ -93,17 +88,20 @@ public class LoggerService extends Service {
         initNotification();
         startForeground(1, notificationBuilder.build());
 
-        intentListener.start();
         imageFileObserver.startWatching();
-        stepLogger.start();
 
-        startActivity(new Intent(this, ScreenCapturePermission.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        batteryLogger.start();
+        stepLogger.start();
+        usageLogger.start();
+
+        //startActivity(new Intent(this, ScreenCapturePermission.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         Toast.makeText(getApplicationContext(), "Start !", Toast.LENGTH_SHORT).show();
     }
     private void stop() {
         stepLogger.stop();
+        batteryLogger.stop();
+        usageLogger.stop();
         imageFileObserver.stopWatching();
-        intentListener.stop();
         notificationManager.cancelAll();
         webServer.stop();
         isRunning = false;
@@ -143,35 +141,6 @@ public class LoggerService extends Service {
                         stopServiceIntent));
     }
 
-    private class IntentListener extends BroadcastReceiver {
-        Context context;
-        public IntentListener(Context context){
-            this.context = context;
-        }
-        public void start(){
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_SCREEN_ON);
-            filter.addAction(Intent.ACTION_SCREEN_OFF);
-            filter.addAction(Intent.ACTION_POWER_CONNECTED);
-            filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
-            context.registerReceiver(this,filter);
-        }
-        public void stop(){
-            context.unregisterReceiver(this);
-        }
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                Utils.writeEventLog("Screen", "Off");
-            } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                Utils.writeEventLog("Screen", "On");
-            } else if (intent.getAction().equals(Intent.ACTION_POWER_CONNECTED)) {
-                Utils.writeEventLog("Power", "Connect," + BatteryUtils.getStatus(intent));
-            } else if(intent.getAction().equals(Intent.ACTION_POWER_DISCONNECTED)) {
-                Utils.writeEventLog("Power","Disconnect," + BatteryUtils.getStatus(intent));
-            }
-        }
-    }
     private class ImageFileObserver extends FileObserver{
         public ImageFileObserver(@NonNull List<File> files) {
             super(files);

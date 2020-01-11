@@ -12,7 +12,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 import static android.content.Context.SENSOR_SERVICE;
 
@@ -24,17 +23,12 @@ public class StepLogger implements SensorEventListener {
     private Handler handler;
     private long stepStartTimeMs = 0;
     private long stepCount = 0;
-    private static LruCache<Long, JsonObject> sLruStepLogCache;
+    private static LruCache<Long, JsonObject> lruLogCache;
 
     public StepLogger(Context context){
         handler = new Handler();
         sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
-        sLruStepLogCache = new LruCache<Long, JsonObject>(MAX_CACHE_LOGSIZE){
-            @Override
-            protected int sizeOf(Long key, JsonObject value) {
-                return value.getAsByte();
-            }
-        };
+        lruLogCache = new LruCache<>(MAX_CACHE_LOGSIZE);
     }
 
     public void start() {
@@ -46,11 +40,15 @@ public class StepLogger implements SensorEventListener {
     }
     public static JsonArray retrieve() {
         JsonArray jsonArray = new JsonArray();
-        Map<Long, JsonObject> logs = sLruStepLogCache.snapshot();
-        logs.forEach((time, log) -> jsonArray.add(log));
+        Map<Long, JsonObject> logs = lruLogCache.snapshot();
+        logs.forEach((time, log) -> {
+            log.addProperty("time",time);
+            jsonArray.add(log);
+        });
         return jsonArray;
     }
-    public void clearAll() {sLruStepLogCache.evictAll();}
+    public void clearAll() {
+        lruLogCache.evictAll();}
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -68,7 +66,7 @@ public class StepLogger implements SensorEventListener {
         JsonObject object = new JsonObject();
         object.addProperty("duration", System.currentTimeMillis() - stepStartTimeMs);
         object.addProperty("step",stepCount);
-        sLruStepLogCache.put(stepStartTimeMs,object);
+        lruLogCache.put(stepStartTimeMs,object);
         stepCount = 0;
         stepStartTimeMs = 0;
     };

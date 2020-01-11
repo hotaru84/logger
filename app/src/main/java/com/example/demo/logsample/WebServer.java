@@ -10,16 +10,12 @@ import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.util.ServerRunner;
 
 public class WebServer extends NanoHTTPD {
-    private Context _context;
     private static final Logger LOG = Logger.getLogger(WebServer.class.getName());
     public static void main(String[] args) {
         ServerRunner.run(WebServer.class);
     }
     public WebServer() {
         super(8080);
-    }
-    public void setContext(Context context){
-        _context = context;
     }
     @Override
     protected void finalize() throws Throwable {
@@ -36,18 +32,23 @@ public class WebServer extends NanoHTTPD {
         } else {
             WebServer.LOG.info(method + " '" + uri + "' ");
         }
-        if(uri.compareTo("/usages") == 0 && _context != null) {
+        if(uri.compareTo("/usages") == 0) {
             long now = System.currentTimeMillis();
             UnixCalendar calendar = new UnixCalendar(now);
             calendar.addDays(-1);
             long begin = calendar.getTimeInMillis();
-            JsonArray usages = UsageLogger.retrieve(_context,begin,now);
+            JsonArray usages = UsageLogger.retrieve(begin,now);
             return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(usages));
         }
         if(uri.compareTo("/steps") == 0){
             JsonArray steps = StepLogger.retrieve();
             return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(steps));
         }
+        if(uri.compareTo("/battery") == 0){
+            JsonArray battery = BatteryLogger.retrieve();
+            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(battery));
+        }
+
         return NanoHTTPD.newChunkedResponse(Response.Status.NOT_FOUND, "text/plain",null);
     }
 }

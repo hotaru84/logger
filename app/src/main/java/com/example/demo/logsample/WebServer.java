@@ -27,25 +27,26 @@ public class WebServer extends NanoHTTPD {
         Method method = session.getMethod();
         String uri = session.getUri();
         String query = session.getQueryParameterString();
+        long end = System.currentTimeMillis();
+        UnixCalendar calendar = new UnixCalendar(end);
+        calendar.addDays(-1);
+        long begin = calendar.getTimeInMillis();
+
         if(query != null) {
             WebServer.LOG.info(method + " '" + uri + "' " + query);
         } else {
             WebServer.LOG.info(method + " '" + uri + "' ");
         }
         if(uri.compareTo("/usages") == 0) {
-            long now = System.currentTimeMillis();
-            UnixCalendar calendar = new UnixCalendar(now);
-            calendar.addDays(-1);
-            long begin = calendar.getTimeInMillis();
-            JsonArray usages = UsageLogger.retrieve(begin,now);
+            JsonArray usages = UsageLogger.retrieve(begin,end);
             return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(usages));
         }
         if(uri.compareTo("/steps") == 0){
-            JsonArray steps = StepLogger.retrieve();
+            JsonArray steps = StepLogger.retrieve(begin,end);
             return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(steps));
         }
         if(uri.compareTo("/battery") == 0){
-            JsonArray battery = BatteryLogger.retrieve();
+            JsonArray battery = BatteryLogger.retrieve(begin,end);
             return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(battery));
         }
 

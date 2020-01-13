@@ -32,12 +32,14 @@ public final class BatteryLogger extends BroadcastReceiver {
     public void stop(){
         context.unregisterReceiver(this);
     }
-    public static JsonArray retrieve() {
+    public static JsonArray retrieve(long begin, long end) {
         JsonArray jsonArray = new JsonArray();
         Map<Long, JsonObject> logs = lruLogCache.snapshot();
         logs.forEach((time, log) -> {
-            log.addProperty("time",time);
-            jsonArray.add(log);
+            if(time >= begin && time < end) {
+                log.addProperty("time", time);
+                jsonArray.add(log);
+            }
         });
         return jsonArray;
     }

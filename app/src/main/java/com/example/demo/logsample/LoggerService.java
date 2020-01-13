@@ -13,13 +13,16 @@ import android.os.IBinder;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.Constraints;
 import androidx.core.app.NotificationCompat;
+import androidx.work.PeriodicWorkRequest;
 
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -140,7 +143,9 @@ public class LoggerService extends Service {
                         getString(R.string.notification_stop_btn),
                         stopServiceIntent));
     }
+    private void initPeriodicWork() {
 
+    }
     private class ImageFileObserver extends FileObserver{
         public ImageFileObserver(@NonNull List<File> files) {
             super(files);

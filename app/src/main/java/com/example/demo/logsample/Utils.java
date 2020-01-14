@@ -62,30 +62,7 @@ public final class Utils {
         }
         return false;
     }
-    public static void saveJsonFile(Context context, String type, String fname, String str) {
-        if(isExternalStorageWritable()) {
-            String text;
-            File file = new File(context.getExternalFilesDir(type), fname);
-            try (FileOutputStream fileOutputStream =
-                         new FileOutputStream(file, false);
-                 OutputStreamWriter outputStreamWriter =
-                         new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
-                 BufferedWriter bw =
-                         new BufferedWriter(outputStreamWriter);
-            ) {
 
-                bw.write(str);
-                bw.flush();
-                text = "saved";
-            } catch (Exception e) {
-                text = "error: FileOutputStream";
-                e.printStackTrace();
-            }
-            Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(context,"Can not write external storage",Toast.LENGTH_SHORT).show();
-        }
-    }
     static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return (Environment.MEDIA_MOUNTED.equals(state));

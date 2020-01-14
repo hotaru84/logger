@@ -36,7 +36,7 @@ public final class BatteryLogger extends BroadcastReceiver {
         JsonArray jsonArray = new JsonArray();
         Map<Long, JsonObject> logs = lruLogCache.snapshot();
         logs.forEach((time, log) -> {
-            if(time >= begin && time < end) {
+            if(time > begin && time <= end) {
                 log.addProperty("time", time);
                 jsonArray.add(log);
             }

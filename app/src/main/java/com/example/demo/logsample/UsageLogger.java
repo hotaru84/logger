@@ -3,10 +3,15 @@ package com.example.demo.logsample;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
-import android.util.Log;
+import android.content.pm.PackageManager;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class UsageLogger {
     private static UsageStatsManager usageStatsManager;
@@ -15,9 +20,11 @@ public class UsageLogger {
     }
     public void start(){}
     public void stop(){}
-    public static JsonArray retrieve(long begin, long end){
+    public static JsonObject retrieve(long begin, long end){
+        JsonObject rootObject = new JsonObject();
+        List pkgList = new ArrayList();
         JsonArray jsonArray = new JsonArray();
-        if(usageStatsManager == null) return jsonArray;
+        if(usageStatsManager == null) return rootObject;
         UsageEvents events = usageStatsManager.queryEvents(begin,end);
         while(events.hasNextEvent()){
             UsageEvents.Event event = new UsageEvents.Event();
@@ -27,9 +34,14 @@ public class UsageLogger {
                 case UsageEvents.Event.ACTIVITY_RESUMED:
                 case UsageEvents.Event.ACTIVITY_PAUSED:
                 case UsageEvents.Event.ACTIVITY_STOPPED:
+                    int id = pkgList.indexOf(event.getPackageName());
+                    if(id < 0) {
+                        pkgList.add(event.getPackageName());
+                        id = pkgList.size() - 1;
+                    }
                     object.addProperty("type",getType(event.getEventType()));
                     object.addProperty("time",event.getTimeStamp());
-                    object.addProperty("pkg",event.getPackageName());
+                    object.addProperty("pkg",id);
                     object.addProperty("cls",event.getClassName());
                     jsonArray.add(object);
                     break;
@@ -44,7 +56,9 @@ public class UsageLogger {
             }
             //Log.d("@@","type" + event.getEventType() );
         }
-        return jsonArray;
+        rootObject.add("pkg", new JsonParser().parse(pkgList.toString()));
+        rootObject.add("log",jsonArray);
+        return rootObject;
     }
     private static String getType (int type) {
         switch (type) {

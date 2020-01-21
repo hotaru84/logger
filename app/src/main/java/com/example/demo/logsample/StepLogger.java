@@ -12,6 +12,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static android.content.Context.SENSOR_SERVICE;
 
@@ -48,6 +49,16 @@ public class StepLogger implements SensorEventListener {
             }
         });
         return jsonArray;
+    }
+    public static long totalLogCount(long begin, long end) {
+        AtomicLong ttl = new AtomicLong();
+        Map<Long, JsonObject> logs = lruLogCache.snapshot();
+        logs.forEach((time, log) -> {
+            if(time > begin && time <= end) {
+                ttl.set(log.get("step").getAsInt());
+            }
+        });
+        return ttl.get();
     }
     public void clearAll() {
         lruLogCache.evictAll();}

@@ -16,6 +16,7 @@ public final class BatteryLogger extends BroadcastReceiver {
     private static final int MAX_CACHE_LOGSIZE = 1024 * 1024;
     private final Context context;
     private static LruCache<Long, JsonObject> lruLogCache;
+    private static long lastScreenOnTimeMs = 0;
     public BatteryLogger(Context context) {
         this.context = context;
         lruLogCache = new LruCache<>(MAX_CACHE_LOGSIZE);
@@ -27,7 +28,10 @@ public final class BatteryLogger extends BroadcastReceiver {
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         filter.addAction(Intent.ACTION_BATTERY_OKAY);
         filter.addAction(Intent.ACTION_BATTERY_LOW);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
         context.registerReceiver(this,filter);
+        lastScreenOnTimeMs = System.currentTimeMillis();
     }
     public void stop(){
         context.unregisterReceiver(this);
@@ -80,15 +84,26 @@ public final class BatteryLogger extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         switch (intent.getAction()) {
+            case Intent.ACTION_SCREEN_ON:
+                lastScreenOnTimeMs = System.currentTimeMillis();
+                break;
+            case Intent.ACTION_SCREEN_OFF: {
+                JsonObject object = new JsonObject();
+                object.addProperty("type", intent.getAction().replace("android.intent.action.", ""));
+                object.addProperty("time",System.currentTimeMillis() - lastScreenOnTimeMs);
+                lruLogCache.put(System.currentTimeMillis(), object);
+                break;
+            }
             case Intent.ACTION_POWER_CONNECTED:
             case Intent.ACTION_POWER_DISCONNECTED:
             case Intent.ACTION_BATTERY_CHANGED:
             case Intent.ACTION_BATTERY_OKAY:
-            case Intent.ACTION_BATTERY_LOW:
+            case Intent.ACTION_BATTERY_LOW: {
                 JsonObject object = getObject(intent);
-                object.addProperty("type",intent.getAction().replace("android.intent.action.",""));
-                lruLogCache.put(System.currentTimeMillis(),object);
+                object.addProperty("type", intent.getAction().replace("android.intent.action.", ""));
+                lruLogCache.put(System.currentTimeMillis(), object);
                 break;
+            }
         }
     }
 }

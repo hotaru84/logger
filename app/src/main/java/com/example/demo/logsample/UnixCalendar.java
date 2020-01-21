@@ -20,7 +20,8 @@ package com.example.demo.logsample;
  * no concept of Locale or TimeZone.
  */
 public class UnixCalendar {
-    public static final long DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
+    public static final long HOUR_IN_MILLIS = 60 * 60 * 1000;
+    public static final long DAY_IN_MILLIS = 24 * HOUR_IN_MILLIS;
     public static final long WEEK_IN_MILLIS = 7 * DAY_IN_MILLIS;
     public static final long MONTH_IN_MILLIS = 30 * DAY_IN_MILLIS;
     public static final long YEAR_IN_MILLIS = 365 * DAY_IN_MILLIS;
@@ -28,6 +29,7 @@ public class UnixCalendar {
     public UnixCalendar(long time) {
         mTime = time;
     }
+    public void addHours(int val) {mTime += val * HOUR_IN_MILLIS;}
     public void addDays(int val) {
         mTime += val * DAY_IN_MILLIS;
     }

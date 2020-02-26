@@ -37,32 +37,9 @@ public class WebServer extends NanoHTTPD {
         } else {
             WebServer.LOG.info(method + " '" + uri + "' ");
         }
-        if(uri.compareTo("/usages") == 0) {
-            JsonObject usages = UsageLogger.retrieve(startOfToday,now);
-            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(usages));
-        }
-        if(uri.compareTo("/worktime") == 0){
-            JsonArray workTime = new JsonArray();
-            long slot = startOfToday;
-            while(slot < now){
-                workTime.add(UsageLogger.totalLogCount(slot,slot + UnixCalendar.HOUR_IN_MILLIS));
-                slot += UnixCalendar.HOUR_IN_MILLIS;
-            }
-            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(workTime));
-        }
-        if(uri.compareTo("/steps") == 0){
-            //JsonArray steps = StepLogger.retrieve(startOfToday,now);
-            JsonArray step = new JsonArray();
-            long slot = startOfToday;
-            while(slot < now){
-                step.add(StepLogger.totalLogCount(slot,slot + UnixCalendar.HOUR_IN_MILLIS));
-                slot += UnixCalendar.HOUR_IN_MILLIS;
-            }
-            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(step));
-        }
-        if(uri.compareTo("/battery") == 0){
-            JsonArray battery = BatteryLogger.retrieve(startOfToday,now);
-            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(battery));
+        if(uri.compareTo("/logs") == 0) {
+            //JsonObject usages = UsageLogger.retrieve(startOfToday,now);
+            //return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/json", new Gson().toJson(usages));
         }
 
         return NanoHTTPD.newChunkedResponse(Response.Status.NOT_FOUND, "text/plain",null);

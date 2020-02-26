@@ -30,6 +30,8 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.BufferedWriter;
@@ -39,98 +41,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 final class WorkerUtils {
+    private static final MediaType JSON
+            = MediaType.get("application/json; charset=utf-8");
     private static final String TAG = WorkerUtils.class.getSimpleName();
 
-    /**
-     * Create a Notification that is shown as a heads-up notification if possible.
-     *
-     * For this codelab, this is used to show a notification so that you know when different steps
-     * of the background work chain are starting
-     *
-     * @param message Message shown on the notification
-     * @param context Context needed to create Toast
-     */
-    static void makeStatusNotification(String message, Context context) {
-
-        // Make a channel if necessary
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create the NotificationChannel, but only on API 26+ because
-            // the NotificationChannel class is new and not in the support library
-            CharSequence name = Constants.VERBOSE_NOTIFICATION_CHANNEL_NAME;
-            String description = Constants.VERBOSE_NOTIFICATION_CHANNEL_DESCRIPTION;
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel =
-                    new NotificationChannel(Constants.CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-
-            // Add the channel
-            NotificationManager notificationManager =
-                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
-        }
-
-        // Create the notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(Constants.NOTIFICATION_TITLE)
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setVibrate(new long[0]);
-
-        // Show the notification
-        NotificationManagerCompat.from(context).notify(Constants.NOTIFICATION_ID, builder.build());
-    }
-
-    /**
-     * Method for sleeping for a fixed about of time to emulate slower work
-     */
-    static void sleep() {
-        try {
-            Thread.sleep(Constants.DELAY_TIME_MILLIS, 0);
-        } catch (InterruptedException e) {
-            Log.d(TAG, e.getMessage());
-        }
-    }
-
-    /**
-     * Writes bitmap to a temporary file and returns the Uri for the file
-     * @param applicationContext Application context
-     * @param bitmap Bitmap to write to temp file
-     * @return Uri for temp file with bitmap
-     * @throws FileNotFoundException Throws if bitmap file cannot be found
-     */
-    static Uri writeBitmapToFile(
-            @NonNull Context applicationContext,
-            @NonNull Bitmap bitmap) throws FileNotFoundException {
-
-        String name = String.format("blur-filter-output-%s.png", UUID.randomUUID().toString());
-        File outputDir = new File(applicationContext.getFilesDir(), Constants.OUTPUT_PATH);
-        if (!outputDir.exists()) {
-            outputDir.mkdirs(); // should succeed
-        }
-        File outputFile = new File(outputDir, name);
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(outputFile);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0 /* ignored for PNG */, out);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-        return Uri.fromFile(outputFile);
-    }
-
-    static boolean writeJsonToFile(Context context, String fname, JsonObject jsonObject) {
+    static boolean saveJsonToFile(Context context, String fname, JsonElement element) {
         File file = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fname);
         try (FileOutputStream fileOutputStream =
                      new FileOutputStream(file, file.exists());
@@ -140,13 +69,37 @@ final class WorkerUtils {
                      new BufferedWriter(outputStreamWriter);
         ) {
 
-            bw.write(new Gson().toJson(jsonObject));
+            bw.write(new Gson().toJson(element));
             bw.flush();
             return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
+    }
+    static JsonElement getJsonFileList(Context context){
+        JsonObject object = new JsonObject();
+        File dir = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getPath());
+        Pattern pattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})_(\\d).json");
+        for(File f : dir.listFiles()){
+            Matcher matcher = pattern.matcher(f.getName());
+            if(matcher.find()) {
+                object.addProperty(matcher.group(1),matcher.group(2));
+            }
+        }
+        return object;
+    }
+    static void postJsonToUrl(JsonElement json, String url) {
+        RequestBody body = RequestBody.create(new Gson().toJson(json), JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        OkHttpClient client = new OkHttpClient();
+        try (Response response = client.newCall(request).execute()) {
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     private WorkerUtils() {
     }

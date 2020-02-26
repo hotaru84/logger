@@ -14,12 +14,17 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -34,26 +39,23 @@ public class LoggerService extends Service {
     public static boolean isRunning = false;
     public static MediaProjection mediaProjection;
     private WebServer webServer;
+    private LogRepository logRepository;
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notificationBuilder;
     private ImageFileObserver imageFileObserver;
     private BatteryLogger batteryLogger;
-    private StepLogger stepLogger;
-    private UsageLogger usageLogger;
 
     @Override
     public void onCreate() {
         super.onCreate();
         webServer = new WebServer();
-
+        logRepository = new LogRepository(getApplication());
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         List<File> files = new ArrayList<>();
         files.add(getExternalFilesDir(Environment.DIRECTORY_DCIM));
         files.add(getExternalFilesDir(Environment.DIRECTORY_PICTURES));
         imageFileObserver = new ImageFileObserver(files);
-        batteryLogger = new BatteryLogger(this);
-        stepLogger = new StepLogger(getApplicationContext());
-        usageLogger = new UsageLogger(getApplicationContext());
+        batteryLogger = new BatteryLogger(this,logRepository);
     }
 
     @Override
@@ -90,18 +92,30 @@ public class LoggerService extends Service {
         startForeground(1, notificationBuilder.build());
 
         imageFileObserver.startWatching();
-
         batteryLogger.start();
-        stepLogger.start();
-        usageLogger.start();
 
+        OneTimeWorkRequest saveLog = new OneTimeWorkRequest.Builder(SaveLogWorker.class).build();
+        WorkManager.getInstance(getApplicationContext())
+                .enqueue(saveLog);
+        LocalDateTime today = LocalDateTime.now();
+        try {
+            Long count = logRepository.queryValue(today,"Launch").get() + 1;
+            logRepository.insert(new Stats(
+                    today.format(DateTimeFormatter.ofPattern("YYYY-MM-DD")),
+                    today.getHour(),
+                    "Launch",
+                    count));
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         //startActivity(new Intent(this, ScreenCapturePermission.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         Toast.makeText(getApplicationContext(), "Start !", Toast.LENGTH_SHORT).show();
     }
     private void stop() {
-        stepLogger.stop();
+        WorkManager.getInstance(getApplicationContext()).cancelUniqueWork(SaveLogWorker.TAG);
         batteryLogger.stop();
-        usageLogger.stop();
         imageFileObserver.stopWatching();
         notificationManager.cancelAll();
         webServer.stop();
@@ -141,9 +155,7 @@ public class LoggerService extends Service {
                         getString(R.string.notification_stop_btn),
                         stopServiceIntent));
     }
-    private void initPeriodicWork() {
 
-    }
     private class ImageFileObserver extends FileObserver{
         public ImageFileObserver(@NonNull List<File> files) {
             super(files);

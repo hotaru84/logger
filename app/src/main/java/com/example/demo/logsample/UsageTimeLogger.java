@@ -50,6 +50,7 @@ public final class UsageTimeLogger extends BroadcastReceiver implements SensorEv
         isActive = powerManager.isInteractive();
         isMoving = false;
         lastStateChangeSecond = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        nowState = Type.ACTIVE;
         updateActiveState();
     }
     public void stop(){
@@ -91,12 +92,12 @@ public final class UsageTimeLogger extends BroadcastReceiver implements SensorEv
 
     private void updateActiveState() {
         Long now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        LogRepository.getInstance().insertStats(nowState,now - lastStateChangeSecond);
         if(isActive) {
             nowState = isMoving ? Type.MOVE_ACTIVE : Type.ACTIVE;
         } else {
             nowState = isMoving ? Type.MOVE_INACTIVE : Type.INACTIVE;
         }
-        LogRepository.getInstance().insertStats(nowState,now - lastStateChangeSecond);
         lastStateChangeSecond = now;
     }
 }

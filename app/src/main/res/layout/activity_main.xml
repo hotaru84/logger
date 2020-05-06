@@ -42,14 +42,49 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
-        android:id="@+id/add"
+    <TextView
+        android:id="@+id/activeSeconds"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="Add"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_marginTop="8dp"
+        android:text="activeSeconds"
+        app:layout_constraintStart_toStartOf="@+id/track_enable_sw"
+        app:layout_constraintTop_toBottomOf="@+id/track_enable_sw" />
+
+    <TextView
+        android:id="@+id/moveActiveSeconds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="moveActiveSeconds"
+        app:layout_constraintStart_toStartOf="@+id/track_enable_sw"
+        app:layout_constraintTop_toBottomOf="@+id/activeSeconds" />
+
+    <TextView
+        android:id="@+id/moveInactiveSeconds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="moveInactiveSeconds"
+        app:layout_constraintStart_toStartOf="@+id/track_enable_sw"
+        app:layout_constraintTop_toBottomOf="@+id/moveActiveSeconds" />
+
+    <TextView
+        android:id="@+id/inactiveSeconds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="inactiveSeconds"
+        app:layout_constraintStart_toStartOf="@+id/track_enable_sw"
+        app:layout_constraintTop_toBottomOf="@+id/moveInactiveSeconds" />
+
+    <TextView
+        android:id="@+id/ttlSeconds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="ttlSeconds"
+        app:layout_constraintStart_toStartOf="@+id/track_enable_sw"
+        app:layout_constraintTop_toBottomOf="@+id/inactiveSeconds" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

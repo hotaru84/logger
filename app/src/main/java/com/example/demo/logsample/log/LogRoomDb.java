@@ -1,4 +1,4 @@
-package com.example.demo.logsample;
+package com.example.demo.logsample.log;
 
 import android.content.Context;
 import androidx.room.Database;

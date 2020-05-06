@@ -18,42 +18,30 @@ package com.example.demo.logsample;
 
 import android.app.Application;
 import android.content.Context;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.gson.JsonElement;
+import com.example.demo.logsample.log.LogRepository;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 /**
  * Saves the image to a permanent file
  */
 public class SaveLogWorker extends Worker {
-    private LogRepository logRepository;
     public SaveLogWorker(
             @NonNull Context appContext,
             @NonNull WorkerParameters workerParams
     ) {
         super(appContext, workerParams);
-        logRepository = new LogRepository((Application) appContext);
     }
     public static final String TAG = SaveLogWorker.class.getSimpleName();
     @NonNull
     @Override
     public Result doWork() {
-        String localDate = LocalDate.now().format(DateTimeFormatter.ofPattern("YY-MM-DD"));
-        WorkerUtils.saveJsonToFile(
-                getApplicationContext(),
-                localDate + ".json",
-                logRepository.getLogList());
         return Result.success();
     }
 }

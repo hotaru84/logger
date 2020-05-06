@@ -18,13 +18,12 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 
+import com.example.demo.logsample.log.LogRepository;
+
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -39,23 +38,22 @@ public class LoggerService extends Service {
     public static boolean isRunning = false;
     public static MediaProjection mediaProjection;
     private WebServer webServer;
-    private LogRepository logRepository;
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notificationBuilder;
     private ImageFileObserver imageFileObserver;
-    private BatteryLogger batteryLogger;
+    private UsageTimeLogger usageTimeLogger;
 
     @Override
     public void onCreate() {
         super.onCreate();
         webServer = new WebServer();
-        logRepository = new LogRepository(getApplication());
+        LogRepository.getInstance().init(getApplication());
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         List<File> files = new ArrayList<>();
         files.add(getExternalFilesDir(Environment.DIRECTORY_DCIM));
         files.add(getExternalFilesDir(Environment.DIRECTORY_PICTURES));
         imageFileObserver = new ImageFileObserver(files);
-        batteryLogger = new BatteryLogger(this,logRepository);
+        usageTimeLogger = new UsageTimeLogger(this);
     }
 
     @Override
@@ -92,30 +90,16 @@ public class LoggerService extends Service {
         startForeground(1, notificationBuilder.build());
 
         imageFileObserver.startWatching();
-        batteryLogger.start();
+        usageTimeLogger.start();
 
         OneTimeWorkRequest saveLog = new OneTimeWorkRequest.Builder(SaveLogWorker.class).build();
         WorkManager.getInstance(getApplicationContext())
                 .enqueue(saveLog);
-        LocalDateTime today = LocalDateTime.now();
-        try {
-            Long count = logRepository.queryValue(today,"Launch").get() + 1;
-            logRepository.insert(new Stats(
-                    today.format(DateTimeFormatter.ofPattern("YYYY-MM-DD")),
-                    today.getHour(),
-                    "Launch",
-                    count));
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //startActivity(new Intent(this, ScreenCapturePermission.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         Toast.makeText(getApplicationContext(), "Start !", Toast.LENGTH_SHORT).show();
     }
     private void stop() {
         WorkManager.getInstance(getApplicationContext()).cancelUniqueWork(SaveLogWorker.TAG);
-        batteryLogger.stop();
+        usageTimeLogger.stop();
         imageFileObserver.stopWatching();
         notificationManager.cancelAll();
         webServer.stop();
@@ -136,7 +120,7 @@ public class LoggerService extends Service {
         stopSelf.setAction(ACTION_STOP_SERVICE);
         PendingIntent startActivityIntent = PendingIntent.getActivity(
                 getApplicationContext(),
-                MainActivity.SHOW_REQUEST,
+                1,
                 new Intent(this, MainActivity.class), FLAG_UPDATE_CURRENT);
         PendingIntent stopServiceIntent = PendingIntent.getForegroundService(
                 getApplicationContext(),

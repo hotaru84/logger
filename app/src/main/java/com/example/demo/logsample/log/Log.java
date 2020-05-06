@@ -1,4 +1,4 @@
-package com.example.demo.logsample;
+package com.example.demo.logsample.log;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
@@ -14,16 +14,18 @@ public class Log {
     @NonNull
     @ColumnInfo(name = "time")
     private Long time;
-
+    @NonNull
+    @ColumnInfo(name = "type")
+    private String type;
     @NonNull
     @ColumnInfo(name = "data")
     private String data;
-    public Log(Long time, String data){ this.time = time; this.data = data;}
+    public Log(Long time, String type, String data){ this.time = time; this.type = type; this.data = data;}
     @NonNull
     public Long getTime() {
         return time;
     }
-
+    public String getType() {return type;}
     @NonNull
     public String getData() {
         return data;

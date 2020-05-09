@@ -1,11 +1,14 @@
 package com.example.demo.logsample.log;
 
 import android.app.Application;
+import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.lifecycle.LiveData;
+import androidx.sqlite.db.SupportSQLiteOpenHelper;
 
 import com.google.gson.JsonObject;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -19,11 +22,13 @@ import java.util.function.Consumer;
 public class LogRepository {
     private LogDao logDao;
     private static LogRepository repository;
+    private SupportSQLiteOpenHelper sqLiteOpenHelper;
 
     private LogRepository() { }
     public void init(Application application){
         if(logDao != null) return;
         LogRoomDb logRoomDb = LogRoomDb.getDb(application);
+        sqLiteOpenHelper = logRoomDb.getOpenHelper();
         logDao = logRoomDb.logDao();
     }
     public static LogRepository getInstance() {
@@ -61,5 +66,19 @@ public class LogRepository {
             logDao.deleteAllLog();
             logDao.deleteAllStats();
         });
+    }
+    public long getDatabaseSize() {
+        File f = new File(sqLiteOpenHelper.getReadableDatabase().getPath());
+        return browseFiles(f);
+    }
+    private long browseFiles(File dir) {
+        long dirSize = 0;
+        for (File f: dir.listFiles()) {
+            dirSize += f.length();
+            if (f.isDirectory()) {
+                dirSize += browseFiles(f);
+            }
+        }
+        return dirSize;
     }
 }

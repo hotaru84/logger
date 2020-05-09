@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_usage"
+        android:icon="@drawable/ic_directions_walk_black_24dp"
+        android:title="Usage" />
+    <item
+        android:id="@+id/navigation_status"
+        android:icon="@drawable/ic_data_usage_black_24dp"
+        android:title="Status" />
+    <item
+        android:id="@+id/navigation_log"
+        android:icon="@drawable/ic_list_black_24dp"
+        android:title="Log" />
+</menu>

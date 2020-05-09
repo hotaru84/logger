@@ -16,4 +16,8 @@
     <string name="action_summary">Summary</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="action_camera">Camera</string>
+    <string name="title_activity_tab">TabActivity</string>
+    <string name="title_usage">Usage</string>
+    <string name="title_status">Status</string>
+    <string name="title_log">Log</string>
 </resources>

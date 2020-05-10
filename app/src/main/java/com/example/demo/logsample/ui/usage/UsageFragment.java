@@ -15,19 +15,18 @@ import androidx.fragment.app.Fragment;
 import com.example.demo.logsample.R;
 import com.example.demo.logsample.log.LogRepository;
 import com.example.demo.logsample.log.Type;
+import com.example.demo.logsample.ui.StatsViewModel;
 
 import java.time.LocalDate;
 
 public class UsageFragment extends Fragment {
+    StatsViewModel statsViewModel;
     View activeStats;
     View moveStats;
     View ttlStats;
-    int active = 0;
-    int inactive = 0;
-    int moveActive = 0;
-    int moveInactive = 0;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        statsViewModel = new StatsViewModel();
         View root = inflater.inflate(R.layout.fragment_usage, container, false);
         activeStats = root.findViewById(R.id.activeTime);
         moveStats = root.findViewById(R.id.movingTime);
@@ -41,36 +40,11 @@ public class UsageFragment extends Fragment {
         aIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_touch_app_black_24dp,null));
         mlabel.setText("Moving");
         mIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_directions_walk_black_24dp,null));
+        statsViewModel.getObservableActiveTime().observe(getViewLifecycleOwner(),s->update());
+        statsViewModel.getObservableInactiveTime().observe(getViewLifecycleOwner(),s->update());
+        statsViewModel.getObservableMoveActiveTime().observe(getViewLifecycleOwner(),s->update());
+        statsViewModel.getObservableMoveInactiveTime().observe(getViewLifecycleOwner(),s->update());
 
-        LogRepository repo = LogRepository.getInstance();
-        repo.observeStats(LocalDate.now(), Type.ACTIVE)
-            .observe(getViewLifecycleOwner(),sec->{
-                if(sec != null) {
-                    active = Math.toIntExact(sec);
-                    update();
-                }
-            });
-        repo.observeStats(LocalDate.now(), Type.INACTIVE)
-                .observe(getViewLifecycleOwner(),sec->{
-                    if(sec != null) {
-                        inactive = Math.toIntExact(sec);
-                        update();
-                    }
-                });
-        repo.observeStats(LocalDate.now(), Type.MOVE_ACTIVE)
-                .observe(getViewLifecycleOwner(),sec->{
-                    if(sec != null) {
-                        moveActive = Math.toIntExact(sec);
-                        update();
-                    }
-                });
-        repo.observeStats(LocalDate.now(), Type.MOVE_INACTIVE)
-                .observe(getViewLifecycleOwner(),sec->{
-                    if(sec != null) {
-                        moveInactive = Math.toIntExact(sec);
-                        update();
-                    }
-                });
         return root;
     }
     private void update() {
@@ -79,9 +53,10 @@ public class UsageFragment extends Fragment {
         TextView moveValue = moveStats.findViewById(R.id.value_text);
         ProgressBar moveProgress = moveStats.findViewById(R.id.progress);
         TextView ttlValue = ttlStats.findViewById(R.id.value_text);
-        int activettl = active + moveActive;
-        int movettl = moveActive + moveInactive;
-        int ttl = active + inactive + moveActive + moveInactive;
+        int activettl = (int) (statsViewModel.getActiveTime() + statsViewModel.getMoveActiveTime());
+        int inactivettl = (int) (statsViewModel.getInactiveTime() + statsViewModel.getMoveInactiveTime());
+        int movettl = (int) (statsViewModel.getMoveActiveTime() + statsViewModel.getMoveInactiveTime());
+        int ttl = activettl + inactivettl;
 
         activeValue.setText(String.format("%.2f",((float)activettl)/60/60));
         activeProgress.setMax(ttl);

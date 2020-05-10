@@ -16,6 +16,7 @@ import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -40,11 +41,20 @@ public class LogRepository {
         Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         return logDao.queryStatsValue(startOfToday,endOfToday,type);
     }
-    public Future<Long> getStatsValue(LocalDate date, String type){
+    public Long getStatsValue(LocalDate date, String type){
         Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
-        return  LogRoomDb.dbWriteExecutor.submit(() ->
+        Future<Long> future = LogRoomDb.dbWriteExecutor.submit(() ->
                 logDao.queryStats(startOfToday, endOfToday, type).stream().mapToLong(stats -> stats.getValue()).sum());
+        try {
+            if(future == null) return 0L;
+            return future.get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return 0L;
     }
     public void insertLog(String type, String data) {
         Long time = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000;

@@ -10,7 +10,11 @@
 
     <include
         android:id="@+id/ttlTime"
-        layout="@layout/summary_card" />
+        layout="@layout/subtitle_card" />
+
+    <include
+        android:id="@+id/scanCount"
+        layout="@layout/progress_card" />
 
     <include
         android:id="@+id/activeTime"

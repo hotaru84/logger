@@ -1,11 +1,21 @@
 <resources>
-
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="fontFamily">@font/lato</item>
+    </style>
+    <style name="whiteChip" parent="Widget.MaterialComponents.Chip.Action">
+        <item name="chipBackgroundColor">@android:color/white</item>
+        <item name="chipStrokeColor">@android:color/white</item>
+        <item name="checkedIconEnabled">false</item>
+    </style>
+    <style name="OutlineChip" parent="Widget.MaterialComponents.Chip.Action">
+        <item name="chipBackgroundColor">@android:color/white</item>
+        <item name="chipStrokeColor">@android:color/darker_gray</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="checkedIconEnabled">false</item>
     </style>
 </resources>

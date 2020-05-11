@@ -30,7 +30,7 @@ public class UsageFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_usage, container, false);
         activeStats = root.findViewById(R.id.activeTime);
         moveStats = root.findViewById(R.id.movingTime);
-        ttlStats = root.findViewById(R.id.ttlTime);
+        //ttlStats = root.findViewById(R.id.ttlTime);
         TextView alabel = activeStats.findViewById(R.id.label_text);
         ImageView aIcon = activeStats.findViewById(R.id.icon);
         TextView mlabel = moveStats.findViewById(R.id.label_text);
@@ -40,11 +40,11 @@ public class UsageFragment extends Fragment {
         aIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_touch_app_black_24dp,null));
         mlabel.setText("Moving");
         mIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_directions_walk_black_24dp,null));
+        statsViewModel.getObservableTargetDate().observe(getViewLifecycleOwner(),date->update());
         statsViewModel.getObservableActiveTime().observe(getViewLifecycleOwner(),s->update());
         statsViewModel.getObservableInactiveTime().observe(getViewLifecycleOwner(),s->update());
         statsViewModel.getObservableMoveActiveTime().observe(getViewLifecycleOwner(),s->update());
         statsViewModel.getObservableMoveInactiveTime().observe(getViewLifecycleOwner(),s->update());
-
         return root;
     }
     private void update() {
@@ -52,7 +52,6 @@ public class UsageFragment extends Fragment {
         ProgressBar activeProgress = activeStats.findViewById(R.id.progress);
         TextView moveValue = moveStats.findViewById(R.id.value_text);
         ProgressBar moveProgress = moveStats.findViewById(R.id.progress);
-        TextView ttlValue = ttlStats.findViewById(R.id.value_text);
         int activettl = (int) (statsViewModel.getActiveTime() + statsViewModel.getMoveActiveTime());
         int inactivettl = (int) (statsViewModel.getInactiveTime() + statsViewModel.getMoveInactiveTime());
         int movettl = (int) (statsViewModel.getMoveActiveTime() + statsViewModel.getMoveInactiveTime());
@@ -65,7 +64,5 @@ public class UsageFragment extends Fragment {
         moveValue.setText(String.format("%.2f",((float)movettl)/60/60));
         moveProgress.setMax(ttl);
         moveProgress.setProgress(movettl,true);
-
-        ttlValue.setText(String.format("%.2f",((float)ttl)/60/60));
     }
 }

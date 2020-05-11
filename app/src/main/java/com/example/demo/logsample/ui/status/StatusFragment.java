@@ -15,9 +15,6 @@ import com.example.demo.logsample.R;
 import com.example.demo.logsample.ui.StatsViewModel;
 
 public class StatusFragment extends Fragment {
-
-    private StatsViewModel statsViewModel;
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_status, container, false);

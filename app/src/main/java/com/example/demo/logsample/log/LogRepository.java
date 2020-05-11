@@ -1,27 +1,23 @@
 package com.example.demo.logsample.log;
 
 import android.app.Application;
-import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
-
-import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
 
 public class LogRepository {
     private LogDao logDao;
+    private MutableLiveData<LocalDate> observableDate = new MutableLiveData<>();
     private static LogRepository repository;
     private SupportSQLiteOpenHelper sqLiteOpenHelper;
 
@@ -31,17 +27,25 @@ public class LogRepository {
         LogRoomDb logRoomDb = LogRoomDb.getDb(application);
         sqLiteOpenHelper = logRoomDb.getOpenHelper();
         logDao = logRoomDb.logDao();
+        observableDate.setValue(LocalDate.now());
     }
     public static LogRepository getInstance() {
         if(repository == null) repository = new LogRepository();
         return repository;
     }
-    public LiveData<Long> observeStats(LocalDate date, String type) {
+    public void setQueryDate(LocalDate d) {
+        observableDate.postValue(d);}
+    public LiveData<LocalDate> observeDate(){
+        return observableDate;
+    }
+    public LiveData<Long> observeStats(String type) {
+        LocalDate date = observableDate.getValue();
         Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         return logDao.queryStatsValue(startOfToday,endOfToday,type);
     }
-    public Long getStatsValue(LocalDate date, String type){
+    public Long getStatsValue( String type){
+        LocalDate date = observableDate.getValue();
         Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         Future<Long> future = LogRoomDb.dbWriteExecutor.submit(() ->

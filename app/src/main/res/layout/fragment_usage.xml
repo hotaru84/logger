@@ -9,10 +9,6 @@
     tools:context=".ui.usage.UsageFragment">
 
     <include
-        android:id="@+id/ttlTime"
-        layout="@layout/subtitle_card" />
-
-    <include
         android:id="@+id/scanCount"
         layout="@layout/progress_card" />
 

@@ -1,6 +1,7 @@
 package com.example.demo.logsample.ui;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -9,30 +10,43 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.Transformations;
-import androidx.lifecycle.ViewModel;
 
-import com.example.demo.logsample.log.Log;
 import com.example.demo.logsample.log.LogRepository;
 import com.example.demo.logsample.log.Stats;
 import com.example.demo.logsample.log.Type;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public class StatsViewModel extends AndroidViewModel {
     private MutableLiveData<LocalDate> queryDate = new MutableLiveData<>();
-    private LiveData<Stats> active;
-    private LiveData<Stats> inactive;
-    private LiveData<Stats> moveActive;
-    private LiveData<Stats> moveInactive;
+    private MediatorLiveData<Long> elapsedTime = new MediatorLiveData<>();
+    private MediatorLiveData<Long> activityTime = new MediatorLiveData<>();
+    private LiveData<Stats> dbActiveStats;
+    private LiveData<Stats> dbInactiveStats;
+    private LiveData<Stats> dbActiveMoveStats;
+    private LiveData<Stats> dbInactiveMoveStats;
+    private Long act = 0L;
+    private Long inact = 0L;
+    private Long moveAct = 0L;
+    private Long moveInact = 0L;
 
     public StatsViewModel(@NonNull Application application) {
         super(application);
         LogRepository.getInstance().init(application);
-        active = queryStats(Type.ACTIVE);
-        inactive = queryStats(Type.INACTIVE);
-        moveActive = queryStats(Type.MOVE_ACTIVE);
-        moveInactive = queryStats(Type.MOVE_INACTIVE);
+        dbActiveStats = queryStats(Type.ACTIVE);
+        dbInactiveStats = queryStats(Type.INACTIVE);
+        dbActiveMoveStats = queryStats(Type.MOVE_ACTIVE);
+        dbInactiveMoveStats = queryStats(Type.MOVE_INACTIVE);
+
+        elapsedTime.addSource(dbActiveStats, elapsedTimeObserver);
+        elapsedTime.addSource(dbInactiveStats,elapsedTimeObserver);
+        elapsedTime.addSource(dbActiveMoveStats,elapsedTimeObserver);
+        elapsedTime.addSource(dbInactiveMoveStats,elapsedTimeObserver);
+
     }
 
     public void setQueryDate(LocalDate date) {
@@ -41,23 +55,56 @@ public class StatsViewModel extends AndroidViewModel {
     public LiveData<String> getQueryDate() {
         return Transformations.map(queryDate, d->d.format(DateTimeFormatter.ISO_DATE));
     }
+    public LiveData<Integer> getActivityTime() {
+        return Transformations.map(activityTime,l->l.intValue());
+    }
+    public LiveData<Integer> getElapsedTime() {
+        return Transformations.map(elapsedTime,l->l.intValue());
+    }
+    public LiveData<Integer> getDbActiveStats() {
+        return getValue(dbActiveStats);
+    }
+
+    public LiveData<Integer> getDbActiveMoveStats() {
+        return getValue(dbActiveMoveStats);
+    }
+
+    public LiveData<Integer> getDbInactiveMoveStats() {
+        return getValue(dbInactiveMoveStats);
+    }
+    private LiveData<Integer> getValue(LiveData<Stats> stats) {
+        return Transformations.map(stats,s->{
+            if(s == null) return 0;
+            if(s.getValue() == null) return 0;
+            return s.getValue().intValue();
+        });
+    }
     private LiveData<Stats> queryStats(String type) {
-        return Transformations.switchMap(queryDate,q-> LogRepository.getInstance().getStats(q, type));
+        return Transformations.switchMap(queryDate,
+                q-> LogRepository.getInstance().getStats(q, type));
     }
+    private Observer<Stats> elapsedTimeObserver = (stats)->{
+        if(stats == null) return;
+        switch (stats.getType()){
+            case Type.ACTIVE:
+                act = stats.getValue();
+                break;
+            case Type.INACTIVE:
+                inact = stats.getValue();
+                break;
+            case Type.MOVE_ACTIVE:
+                moveAct = stats.getValue();
+                break;
+            case Type.MOVE_INACTIVE:
+                moveInact = stats.getValue();
+                break;
+        }
 
-    public LiveData<Stats> getActive() {
-        return active;
-    }
-
-    public LiveData<Stats> getInactive() {
-        return inactive;
-    }
-
-    public LiveData<Stats> getMoveActive() {
-        return moveActive;
-    }
-
-    public LiveData<Stats> getMoveInactive() {
-        return moveInactive;
-    }
+        Long startOfToday = queryDate.getValue().atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+        Long now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        Long endOfToday = queryDate.getValue().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+        Log.d("@@",stats.getType() + ":" + stats.getValue());
+        elapsedTime.postValue(now > endOfToday ? endOfToday - startOfToday : now -startOfToday);
+        activityTime.postValue(act + moveAct + moveInact);
+    };
 }

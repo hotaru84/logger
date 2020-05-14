@@ -13,13 +13,13 @@
 
     <fragment
         android:id="@+id/navigation_status"
-        android:name="com.example.demo.logsample.ui.status.StatusFragment"
+        android:name="com.example.demo.logsample.ui.StatusFragment"
         android:label="@string/title_status"
         tools:layout="@layout/fragment_status" />
 
     <fragment
         android:id="@+id/navigation_log"
-        android:name="com.example.demo.logsample.ui.log.LogFragment"
+        android:name="com.example.demo.logsample.ui.LogFragment"
         android:label="@string/title_log"
         tools:layout="@layout/fragment_log" />
 </navigation>

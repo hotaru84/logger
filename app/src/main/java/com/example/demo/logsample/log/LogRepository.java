@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class LogRepository {
     private LogDao logDao;
@@ -27,10 +29,24 @@ public class LogRepository {
         if(repository == null) repository = new LogRepository();
         return repository;
     }
+    public Long getStatsValue(LocalDate date, String type) {
+        Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
+        Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
+        Future<Long> val  = LogRoomDb.dbWriteExecutor.submit(()-> logDao.queryStatsValue(startOfToday, endOfToday, type));
+        if(val == null) return 0L;
+        try {
+            Long res = val.get();
+            return res == null ? 0L : res;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return 0L;
+    }
     public LiveData<Stats> getStats(LocalDate date, String type) {
         Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
-
         return logDao.queryStats(startOfToday,endOfToday,type);
     }
     public void insertLog(String type, String data) {

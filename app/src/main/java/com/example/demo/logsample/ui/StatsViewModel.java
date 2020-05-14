@@ -35,10 +35,10 @@ public class StatsViewModel extends AndroidViewModel {
         moveInactive = queryStats(Type.MOVE_INACTIVE);
     }
 
-    public void setTargetDate(LocalDate date) {
+    public void setQueryDate(LocalDate date) {
         queryDate.setValue(date);
     }
-    public LiveData<String> getTargetDate() {
+    public LiveData<String> getQueryDate() {
         return Transformations.map(queryDate, d->d.format(DateTimeFormatter.ISO_DATE));
     }
     private LiveData<Stats> queryStats(String type) {

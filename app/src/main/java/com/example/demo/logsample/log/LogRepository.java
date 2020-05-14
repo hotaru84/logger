@@ -43,8 +43,8 @@ public class LogRepository {
         Long startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         Long endOfToday = LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
         LogRoomDb.dbWriteExecutor.execute(()->{
-            Stats stats = logDao.queryStats(startOfToday,endOfToday,type).getValue();
-            Long finalValue = stats != null ? value + stats.getValue() : value;
+            Long stats = logDao.queryStatsValue(startOfToday,endOfToday,type);
+            Long finalValue = stats != null ? value + stats : value;
             logDao.insert(new Stats(startOfToday, type, finalValue));
         });
     }

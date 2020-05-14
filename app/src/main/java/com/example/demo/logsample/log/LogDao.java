@@ -32,7 +32,7 @@ public interface LogDao {
     @Query("SELECT * from stats_table WHERE time >= :start AND time < :end  AND type=:type  ORDER BY time DESC")
     LiveData<Stats> queryStats(long start, long end, String type);
     @Query("SELECT value from stats_table WHERE time >= :start AND time < :end  AND type=:type LIMIT 1")
-    LiveData<Long> queryStatsValue(long start, long end, String type);
+    Long queryStatsValue(long start, long end, String type);
 
     @Query("SELECT COUNT(*) from log_table")
     long getLogCount();

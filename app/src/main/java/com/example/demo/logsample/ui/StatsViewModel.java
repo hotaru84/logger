@@ -1,49 +1,63 @@
 package com.example.demo.logsample.ui;
 
+import android.app.Application;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
+import com.example.demo.logsample.log.Log;
 import com.example.demo.logsample.log.LogRepository;
+import com.example.demo.logsample.log.Stats;
 import com.example.demo.logsample.log.Type;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
-public class StatsViewModel extends ViewModel {
-    private LogRepository repo;
-    public StatsViewModel() {
-        repo = LogRepository.getInstance();
+public class StatsViewModel extends AndroidViewModel {
+    private MutableLiveData<LocalDate> queryDate = new MutableLiveData<>();
+    private LiveData<Stats> active;
+    private LiveData<Stats> inactive;
+    private LiveData<Stats> moveActive;
+    private LiveData<Stats> moveInactive;
+
+    public StatsViewModel(@NonNull Application application) {
+        super(application);
+        LogRepository.getInstance().init(application);
+        active = queryStats(Type.ACTIVE);
+        inactive = queryStats(Type.INACTIVE);
+        moveActive = queryStats(Type.MOVE_ACTIVE);
+        moveInactive = queryStats(Type.MOVE_INACTIVE);
     }
+
     public void setTargetDate(LocalDate date) {
-        LogRepository.getInstance().setQueryDate(date);
+        queryDate.setValue(date);
     }
-    public Long getActiveTime() {
-        return LogRepository.getInstance().getStatsValue(Type.ACTIVE);
+    public LiveData<String> getTargetDate() {
+        return Transformations.map(queryDate, d->d.format(DateTimeFormatter.ISO_DATE));
     }
-    public Long getInactiveTime() {
-        return LogRepository.getInstance().getStatsValue(Type.INACTIVE);
-    }
-    public Long getMoveActiveTime() {
-        return LogRepository.getInstance().getStatsValue(Type.MOVE_ACTIVE);
-    }
-    public Long getMoveInactiveTime() {
-        return LogRepository.getInstance().getStatsValue(Type.MOVE_INACTIVE);
-    }
-    public LiveData<Long> getObservableActiveTime() {
-        return repo.observeStats(Type.ACTIVE);
-    }
-    public LiveData<LocalDate> getObservableTargetDate() {
-        return repo.observeDate();
-    }
-    public LiveData<Long> getObservableInactiveTime() {
-        return repo.observeStats( Type.INACTIVE);
+    private LiveData<Stats> queryStats(String type) {
+        return Transformations.switchMap(queryDate,q-> LogRepository.getInstance().getStats(q, type));
     }
 
-    public LiveData<Long> getObservableMoveActiveTime() {
-        return repo.observeStats( Type.MOVE_ACTIVE);
+    public LiveData<Stats> getActive() {
+        return active;
     }
 
-    public LiveData<Long> getObservableMoveInactiveTime() {
-        return repo.observeStats( Type.MOVE_INACTIVE);
+    public LiveData<Stats> getInactive() {
+        return inactive;
+    }
+
+    public LiveData<Stats> getMoveActive() {
+        return moveActive;
+    }
+
+    public LiveData<Stats> getMoveInactive() {
+        return moveInactive;
     }
 }

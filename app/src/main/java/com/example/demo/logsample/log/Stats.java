@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 
+import com.example.demo.logsample.R;
 import com.google.gson.JsonObject;
 
 import java.time.LocalDateTime;
@@ -32,9 +33,11 @@ public class Stats {
         obj.addProperty("type",type);
         return obj;
     }
+
     public Long getTime() {return time;}
 
     public Long getValue() { return value; }
 
     public String getType() { return type; }
+    public String getValueText() { return  value.toString();}
 }

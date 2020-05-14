@@ -8,6 +8,11 @@ import androidx.room.PrimaryKey;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+
 @Entity(tableName = "log_table")
 public class Log {
     @PrimaryKey
@@ -30,10 +35,8 @@ public class Log {
     public String getData() {
         return data;
     }
-    public JsonObject getJsonObject(){
-        JsonObject obj = new JsonObject();
-        obj.addProperty("time",time);
-        obj.addProperty("data",data);
-        return obj;
+    public String getFormattedTime(){
+        LocalDateTime d = LocalDateTime.ofEpochSecond(time,0, ZoneOffset.UTC);
+        return d.format(DateTimeFormatter.ISO_DATE_TIME);
     }
 }

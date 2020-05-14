@@ -58,6 +58,8 @@ public final class UsageTimeLogger implements SensorEventListener {
         context.registerReceiver(powerStateMonitor,filter);
         Sensor stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+
         isActive = powerManager.isInteractive();
         isMoving = false;
         lastStateChangeSecond = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);

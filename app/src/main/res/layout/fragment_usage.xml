@@ -1,22 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="8dp"
-    android:orientation="vertical"
-    tools:context=".ui.usage.UsageFragment">
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <include
-        android:id="@+id/scanCount"
-        layout="@layout/progress_card" />
+    <data>
+        <variable
+            name="vm"
+            type="com.example.demo.logsample.ui.StatsViewModel" />
+    </data>
 
-    <include
-        android:id="@+id/activeTime"
-        layout="@layout/progress_card" />
-
-    <include
-        android:id="@+id/movingTime"
-        layout="@layout/progress_card" />
-</LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:orientation="vertical"
+        tools:context=".ui.UsageFragment">
+        <include
+            layout="@layout/stats_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            bind:stats="@{vm.active}"/>
+        <include
+            layout="@layout/stats_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            bind:stats="@{vm.inactive}"/>
+        <include
+            layout="@layout/stats_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            bind:stats="@{vm.moveActive}"/>
+        <include
+            layout="@layout/stats_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            bind:stats="@{vm.moveInactive}"/>
+    </LinearLayout>
+</layout>

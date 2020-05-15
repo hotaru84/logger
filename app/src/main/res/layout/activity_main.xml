@@ -6,7 +6,7 @@
     <data>
         <variable
             name="vm"
-            type="com.example.demo.logsample.ui.StatsViewModel" />
+            type="com.example.demo.logsample.ui.LogViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -54,8 +54,9 @@
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             app:defaultNavHost="true"
+            app:layout_constraintBottom_toTopOf="@+id/nav_view"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/date_pick"

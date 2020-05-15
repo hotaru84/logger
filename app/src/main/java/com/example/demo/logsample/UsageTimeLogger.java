@@ -14,6 +14,7 @@ import android.net.NetworkCapabilities;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.PowerManager;
 
@@ -92,6 +93,7 @@ public final class UsageTimeLogger implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int i) { }
 
     private void updateActiveState() {
+        String prev = powerState == null ? "" : powerState;
         Long now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         if(powerState != null) {
             LogRepository.getInstance().insertStats(powerState, now - lastStateChangeSecond);
@@ -101,6 +103,7 @@ public final class UsageTimeLogger implements SensorEventListener {
         } else {
             powerState = isMoving ? Type.MOVE_INACTIVE : Type.INACTIVE;
         }
+        LogRepository.getInstance().insertLog(powerState,prev);
         lastStateChangeSecond = now;
     }
     private BroadcastReceiver powerStateMonitor = new BroadcastReceiver() {
@@ -116,6 +119,8 @@ public final class UsageTimeLogger implements SensorEventListener {
                     updateActiveState();
                     break;
                 case Intent.ACTION_BATTERY_CHANGED:
+                    int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL,-1);
+                    LogRepository.getInstance().insertLog(Type.BATTERY_NORMAL,"lv:" + level);
                     break;
             }
         }
@@ -141,6 +146,7 @@ public final class UsageTimeLogger implements SensorEventListener {
                     networkState = Type.WIFI_LOW;
                     break;
             }
+            LogRepository.getInstance().insertLog(networkState,"rssi:" + level);
         }
         lastNetworkChangeSecond = now;
     }

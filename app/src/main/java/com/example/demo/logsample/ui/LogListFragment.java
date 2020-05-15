@@ -11,17 +11,23 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.demo.logsample.R;
-import com.example.demo.logsample.databinding.FragmentUsageBinding;
+import com.example.demo.logsample.databinding.FragmentLoglistBinding;
 
-
-public class UsageFragment extends Fragment {
-    LogViewModel logViewModel;
+public class LogListFragment extends Fragment {
+    private LogViewModel logViewModel;
+    private LogListAdapter adapter;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         logViewModel = new ViewModelProvider(requireActivity()).get(LogViewModel.class);
-        FragmentUsageBinding binding = DataBindingUtil.inflate(inflater,R.layout.fragment_usage,container, false);
+        adapter = new LogListAdapter(getViewLifecycleOwner());
+
+        FragmentLoglistBinding binding = DataBindingUtil.inflate(inflater,R.layout.fragment_loglist,container,false);
         binding.setLifecycleOwner(getViewLifecycleOwner());
-        binding.setVm(logViewModel);
+        binding.recyclerView.setAdapter(adapter);
+        logViewModel.queryLogList().observe(getViewLifecycleOwner(),list->{
+            adapter.setList(list);
+            binding.recyclerView.setAdapter(adapter);
+        });
         return binding.getRoot();
     }
 }

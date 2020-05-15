@@ -27,7 +27,7 @@ public interface LogDao {
     void deleteAllStats();
 
     @Query("SELECT * from log_table WHERE time >= :start AND time < :end ORDER BY time DESC")
-    List<Log> queryLog(long start, long end);
+    LiveData<List<Log>> queryLog(long start, long end);
 
     @Query("SELECT * from stats_table WHERE time >= :start AND time < :end  AND type=:type  ORDER BY time DESC")
     LiveData<Stats> queryStats(long start, long end, String type);
@@ -35,7 +35,7 @@ public interface LogDao {
     Long queryStatsValue(long start, long end, String type);
 
     @Query("SELECT COUNT(*) from log_table")
-    long getLogCount();
+    Long getLogCount();
 
     @Query("SELECT COUNT(*) from stats_table")
     long getStatsCount();

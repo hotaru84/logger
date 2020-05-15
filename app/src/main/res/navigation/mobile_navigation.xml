@@ -19,7 +19,7 @@
 
     <fragment
         android:id="@+id/navigation_log"
-        android:name="com.example.demo.logsample.ui.LogFragment"
+        android:name="com.example.demo.logsample.ui.LogListFragment"
         android:label="@string/title_log"
-        tools:layout="@layout/fragment_log" />
+        tools:layout="@layout/fragment_loglist" />
 </navigation>

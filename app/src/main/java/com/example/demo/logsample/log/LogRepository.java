@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -29,24 +30,14 @@ public class LogRepository {
         if(repository == null) repository = new LogRepository();
         return repository;
     }
-    public Long getStatsValue(LocalDate date, String type) {
-        Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
-        Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
-        Future<Long> val  = LogRoomDb.dbWriteExecutor.submit(()-> logDao.queryStatsValue(startOfToday, endOfToday, type));
-        if(val == null) return 0L;
-        try {
-            Long res = val.get();
-            return res == null ? 0L : res;
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return 0L;
+    public LiveData<List<Log>> getLog(LocalDate date) {
+        Long startOfToday = date.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        Long endOfToday = date.plusDays(1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        return logDao.queryLog(startOfToday,endOfToday);
     }
     public LiveData<Stats> getStats(LocalDate date, String type) {
-        Long startOfToday = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
-        Long endOfToday = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
+        Long startOfToday = date.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        Long endOfToday = date.plusDays(1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         return logDao.queryStats(startOfToday,endOfToday,type);
     }
     public void insertLog(String type, String data) {
@@ -56,8 +47,8 @@ public class LogRepository {
         });
     }
     public void insertStats(String type, Long value) {
-        Long startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
-        Long endOfToday = LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000;
+        Long startOfToday = LocalDate.now().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        Long endOfToday = LocalDate.now().plusDays(1).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         LogRoomDb.dbWriteExecutor.execute(()->{
             Long stats = logDao.queryStatsValue(startOfToday,endOfToday,type);
             Long finalValue = stats != null ? value + stats : value;

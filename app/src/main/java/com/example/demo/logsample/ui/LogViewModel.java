@@ -1,7 +1,6 @@
 package com.example.demo.logsample.ui;
 
 import android.app.Application;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -11,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.Transformations;
 
+import com.example.demo.logsample.log.Log;
 import com.example.demo.logsample.log.LogRepository;
 import com.example.demo.logsample.log.Stats;
 import com.example.demo.logsample.log.Type;
@@ -20,8 +20,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
-public class StatsViewModel extends AndroidViewModel {
+public class LogViewModel extends AndroidViewModel {
     private MutableLiveData<LocalDate> queryDate = new MutableLiveData<>();
     private MediatorLiveData<Long> elapsedTime = new MediatorLiveData<>();
     private MediatorLiveData<Long> activityTime = new MediatorLiveData<>();
@@ -29,12 +30,13 @@ public class StatsViewModel extends AndroidViewModel {
     private LiveData<Stats> dbInactiveStats;
     private LiveData<Stats> dbActiveMoveStats;
     private LiveData<Stats> dbInactiveMoveStats;
+    private LiveData<List<Log>> logs;
     private Long act = 0L;
     private Long inact = 0L;
     private Long moveAct = 0L;
     private Long moveInact = 0L;
 
-    public StatsViewModel(@NonNull Application application) {
+    public LogViewModel(@NonNull Application application) {
         super(application);
         LogRepository.getInstance().init(application);
         dbActiveStats = queryStats(Type.ACTIVE);
@@ -47,13 +49,17 @@ public class StatsViewModel extends AndroidViewModel {
         elapsedTime.addSource(dbActiveMoveStats,elapsedTimeObserver);
         elapsedTime.addSource(dbInactiveMoveStats,elapsedTimeObserver);
 
+        logs = Transformations.switchMap(queryDate,
+                q -> LogRepository.getInstance().getLog(q));
     }
-
     public void setQueryDate(LocalDate date) {
         queryDate.setValue(date);
     }
     public LiveData<String> getQueryDate() {
         return Transformations.map(queryDate, d->d.format(DateTimeFormatter.ISO_DATE));
+    }
+    public LiveData<List<Log>> queryLogList() {
+        return logs;
     }
     public LiveData<Integer> getActivityTime() {
         return Transformations.map(activityTime,l->l.intValue());
@@ -103,7 +109,6 @@ public class StatsViewModel extends AndroidViewModel {
         Long startOfToday = queryDate.getValue().atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
         Long now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         Long endOfToday = queryDate.getValue().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
-        Log.d("@@",stats.getType() + ":" + stats.getValue());
         elapsedTime.postValue(now > endOfToday ? endOfToday - startOfToday : now -startOfToday);
         activityTime.postValue(act + moveAct + moveInact);
     };
